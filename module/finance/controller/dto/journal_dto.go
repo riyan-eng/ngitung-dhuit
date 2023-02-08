@@ -6,6 +6,7 @@ type PurchaseJournal struct {
 	Price         float64 `json:"price" validate:"required"`
 	PPNIncome     bool    `json:"ppn_income" validate:"required"`
 	FreightPaid   float64 `json:"freight_paid"`
+	CreditAccount string  `json:"credit_account" validate:"required"`
 }
 
 type SalesJournal struct {
@@ -14,4 +15,5 @@ type SalesJournal struct {
 	Price            float64 `json:"price" validate:"required"`
 	PPNOutcome       bool    `json:"ppn_outcome" validate:"required"`
 	FreightCollected float64 `json:"freight_collected"`
+	DebitAccount     string  `json:"debit_account" validate:"required"`
 }

@@ -9,7 +9,8 @@ import (
 )
 
 func Setup(app *fiber.App) {
-	repo := repository.NewJournalRepository(config.DB)
-	srvc := service.NewJournalSerice(repo)
+	journalRepository := repository.NewJournalRepository(config.DB)
+	coaRepository := repository.NewCOARepository(config.DB)
+	srvc := service.NewJournalSerice(journalRepository, coaRepository)
 	controller.NewJournalController(srvc, app)
 }
