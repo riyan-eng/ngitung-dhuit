@@ -10,13 +10,13 @@ type journalService struct {
 }
 
 func NewJournalController(service service.JournalService, route *fiber.App) {
-	s := &journalService{
+	srvc := &journalService{
 		Journal: service,
 	}
 
 	journalRoute := route.Group("/journal")
-	journalRoute.Post("/purchase", s.PurchaseJournal)
-	journalRoute.Post("/sales", s.SalesJournal)
+	journalRoute.Post("/purchase", srvc.PurchaseJournal)
+	journalRoute.Post("/sales", srvc.SalesJournal)
 }
 
 func (service journalService) PurchaseJournal(c *fiber.Ctx) error {

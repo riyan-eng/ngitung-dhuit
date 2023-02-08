@@ -8,10 +8,10 @@ type JournalRepository interface {
 }
 
 type database struct {
-	Journal sql.DB
+	Journal *sql.DB
 }
 
-func NewJournalRepository(db sql.DB) JournalRepository {
+func NewJournalRepository(db *sql.DB) JournalRepository {
 	return &database{
 		Journal: db,
 	}
