@@ -11,6 +11,8 @@ import (
 func Setup(app *fiber.App) {
 	journalRepository := repository.NewJournalRepository(config.DB)
 	coaRepository := repository.NewCOARepository(config.DB)
-	srvc := service.NewJournalSerice(journalRepository, coaRepository)
+	inventoryRepository := repository.NewInventoryRepository(config.DB)
+	linkedAccountRepository := repository.NewLinkedAccountRepository(config.DB)
+	srvc := service.NewJournalSerice(journalRepository, coaRepository, inventoryRepository, linkedAccountRepository)
 	controller.NewJournalController(srvc, app)
 }
