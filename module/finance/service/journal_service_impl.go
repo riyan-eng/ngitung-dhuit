@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/riyan-eng/ngitung-dhuit/module/finance/controller/dto"
 	"github.com/riyan-eng/ngitung-dhuit/module/finance/repository"
@@ -15,14 +14,16 @@ type journalServiceImpl struct {
 	COARepository           repository.COARepository
 	InventoryRepository     repository.InventoryRepository
 	LinkedAccountRepository repository.LinkedAccountRepository
+	TaxRepository           repository.TaxRepository
 }
 
-func NewJournalSerice(journalRepository repository.JournalRepository, coaRepository repository.COARepository, inventoryRepository repository.InventoryRepository, linkedAccountRepository repository.LinkedAccountRepository) JournalService {
+func NewJournalSerice(journalRepository repository.JournalRepository, coaRepository repository.COARepository, inventoryRepository repository.InventoryRepository, linkedAccountRepository repository.LinkedAccountRepository, taxRepository repository.TaxRepository) JournalService {
 	return &journalServiceImpl{
 		JournalRepository:       journalRepository,
 		COARepository:           coaRepository,
 		InventoryRepository:     inventoryRepository,
 		LinkedAccountRepository: linkedAccountRepository,
+		TaxRepository:           taxRepository,
 	}
 }
 
@@ -43,14 +44,16 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	}
 
 	// jurnal menambah inventory
+	var inventoryAmount float64 = dto.Price * float64(dto.Quantity)
+
 	journalInventory := entity.PurchaseJournal{
 		Debet: entity.PurchaseJournalDebet{
 			Code:   coaInventory,
-			Amount: dto.Price * float64(dto.Quantity),
+			Amount: inventoryAmount,
 		},
 		Credit: entity.PurchaseJournalCredit{
 			Code:   dto.CreditAccount,
-			Amount: dto.Price * float64(dto.Quantity),
+			Amount: inventoryAmount,
 		},
 	}
 
@@ -62,56 +65,57 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	// jurnal pajak
 	if dto.PPNIncome == true {
 		coaPPNIncome, err := service.LinkedAccountRepository.GetByCode("ppn_income")
-		// journalInventory := entity.PurchaseJournal{
-		// 	Debet: entity.PurchaseJournalDebet{
-		// 		Code:   coaPPNIncome,
-		// 		Amount: dto.Price * float64(dto.Quantity),
-		// 	},
-		// 	Credit: entity.PurchaseJournalCredit{
-		// 		Code:   dto.CreditAccount,
-		// 		Amount: dto.Price * float64(dto.Quantity),
-		// 	},
-		// }
+		if err != nil {
+			return errors.New("error getting linked account")
+		}
+		tax, err := service.TaxRepository.GetByCoa(coaPPNIncome)
+		if err != nil {
+			return errors.New("error getting tax rate")
+		}
 
-		// err = service.JournalRepository.PurchaseJournal(journalInventory)
-		// if err != nil {
-		// 	return errors.New("error journal add inventory")
-		// }
+		var taxRate float64 = float64(tax) / 100
+		var taxAmount float64 = inventoryAmount * taxRate
+
+		journalPPNIncome := entity.PurchaseJournal{
+			Debet: entity.PurchaseJournalDebet{
+				Code:   coaPPNIncome,
+				Amount: taxAmount,
+			},
+			Credit: entity.PurchaseJournalCredit{
+				Code:   dto.CreditAccount,
+				Amount: taxAmount,
+			},
+		}
+
+		err = service.JournalRepository.PurchaseJournal(journalPPNIncome)
+		if err != nil {
+			return errors.New("error journal add inventory")
+		}
 	}
 
-	// var inventory float64 = dto.Price * float64(dto.Quantity)
-	// var coaInventory string = coaInventorys
+	// jurnal biaya angkut
+	if dto.FreightPaid > 0 {
+		coaFreightPaid, err := service.LinkedAccountRepository.GetByCode("freight_paid")
+		if err != nil {
+			return errors.New("error getting linked account")
+		}
 
-	var creditAmount float64 = inventory
-	var creditCoa string = dto.CreditAccount
+		journalFreightPaid := entity.PurchaseJournal{
+			Debet: entity.PurchaseJournalDebet{
+				Code:   coaFreightPaid,
+				Amount: dto.FreightPaid,
+			},
+			Credit: entity.PurchaseJournalCredit{
+				Code:   dto.CreditAccount,
+				Amount: dto.FreightPaid,
+			},
+		}
 
-	fmt.Println(coaInventory)
-	fmt.Println(creditAmount)
-	fmt.Println(creditCoa)
-
-	// creditAccount, err := repo.Journal.PurchaseJournal()
-
-	// cek akun ppn masukan
-
-	// var ppn_income_rate float64 = 8 / 100
-
-	// debet
-	// var inventory float64 = dto.Price * float64(dto.Quantity)
-
-	// if dto.PPNIncome == true{
-	// 	var ppn_income float64 = ppn_income_rate * inventory
-
-	//jurnal
-	// }
-
-	// if dto.FreightPaid != 0{
-	// 	var freight_paid float64 = dto.FreightPaid
-
-	// jurnal
-	// }
-
-	// // kredit
-	// cash_or_payable := dto.CreditAccount
+		err = service.JournalRepository.PurchaseJournal(journalFreightPaid)
+		if err != nil {
+			return errors.New("error journal add inventory")
+		}
+	}
 
 	return nil
 }

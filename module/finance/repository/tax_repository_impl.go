@@ -12,6 +12,6 @@ func NewTaxRepository(db *sql.DB) TaxRepository {
 	}
 }
 
-func (repository *taxRepositoryImpl) GetByCoa(string) (string, error) {
-	return "", nil
+func (repository *taxRepositoryImpl) GetByCoa(string) (int, error) {
+	return 11, nil
 }
