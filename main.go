@@ -5,11 +5,14 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/riyan-eng/ngitung-dhuit/config"
 	"github.com/riyan-eng/ngitung-dhuit/module/finance"
 )
 
 func init() {
 	os.Setenv("TZ", "Asia/Jakarta")
+	config.Environment()
+	config.DatabaseConnection()
 }
 
 func main() {
@@ -21,5 +24,5 @@ func main() {
 	})
 
 	finance.Setup(app)
-	app.Listen(":3000")
+	app.Listen(os.Getenv("SERVER_URL"))
 }

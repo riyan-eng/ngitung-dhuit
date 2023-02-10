@@ -92,7 +92,7 @@ CREATE TABLE finance.purchase_journals(
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   transaction_id VARCHAR NOT NULL,
   coa_code VARCHAR NOT NULL,
-  dk VARCHAR NOT NULL,
+  dc VARCHAR NOT NULL,
   amount NUMERIC NOT NULL,
   FOREIGN KEY (transaction_id) REFERENCES finance.transactions (id),
   FOREIGN KEY (coa_code) REFERENCES finance.coas (code)

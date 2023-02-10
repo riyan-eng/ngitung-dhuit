@@ -1,8 +1,9 @@
 package entity
 
 type PurchaseJournal struct {
-	Debet  PurchaseJournalDebet
-	Credit PurchaseJournalCredit
+	TransactionID string
+	Debet         PurchaseJournalDebet
+	Credit        PurchaseJournalCredit
 }
 
 type PurchaseJournalDebet struct {
