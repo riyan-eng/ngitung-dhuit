@@ -79,3 +79,21 @@ INSERT INTO finance.goods(
 ) VALUES
   ('HPP-14', 'HP Paviion 14', NULL),
   ('DI-15', 'Dell Inspiron 15', NULL);
+
+CREATE TABLE finance.transactions(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  description VARCHAR,
+  amount NUMERIC NOT NULL
+);
+
+CREATE TABLE finance.purchase_journals(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transaction_id VARCHAR NOT NULL,
+  coa_code VARCHAR NOT NULL,
+  dk VARCHAR NOT NULL,
+  amount NUMERIC NOT NULL,
+  FOREIGN KEY (transaction_id) REFERENCES finance.transactions (id),
+  FOREIGN KEY (coa_code) REFERENCES finance.coas (code)
+);
