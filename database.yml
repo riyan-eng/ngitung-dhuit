@@ -1,0 +1,6 @@
+development:
+  dialect: postgres
+  database: ngitung_dhuit
+  user: postgres
+  password: riyan
+  host: 127.0.0.1
