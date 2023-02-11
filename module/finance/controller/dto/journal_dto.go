@@ -7,6 +7,8 @@ type PurchaseJournal struct {
 	PPNIncome     bool    `json:"ppn_income"`
 	FreightPaid   float64 `json:"freight_paid"`
 	CreditAccount string  `json:"credit_account" validate:"required"`
+	SupplierCode  string  `json:"supplier_code"`
+	Description   string  `json:"description"`
 }
 
 type SalesJournal struct {

@@ -110,7 +110,8 @@ INSERT INTO finance.linked_accounts(
   code, coa_code
 ) VALUES
   ('ppn_income', '2-1500'),
-  ('ppn_outcome', '2-1600');
+  ('ppn_outcome', '2-1600'),
+  ('freight_paid', '5-1200');
 
 CREATE TABLE finance.taxes(
   id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
@@ -126,3 +127,36 @@ INSERT INTO finance.taxes(
 ) VALUES 
   ('2-1500', 'Pajak pertambahan nilai masuk', 11),
   ('2-1600', 'Pajak pertambahan nilai keluar', 11);
+
+CREATE TABLE finance.good_stocks(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  good_code VARCHAR NOT NULL,
+  dc VARCHAR NOT NULL,
+  quantity INTEGER NOT NULL,
+  price NUMERIC NOT NULL,
+  amount NUMERIC NOT NULL,
+  balance_quantity INTEGER NOT NULL,
+  balance_price NUMERIC NOT NULL,
+  balance_amount NUMERIC NOT NULL,
+  FOREIGN KEY (good_code) REFERENCES finance.goods (code)
+);
+
+CREATE TABLE finance.suppliers(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  code VARCHAR NOT NULL UNIQUE,
+  name VARCHAR NOT NULL,
+  address VARCHAR,
+  phone VARCHAR,
+  email VARCHAR
+);
+
+CREATE TABLE finance.account_payable_subsidiary_ledgers(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  supplier_code VARCHAR NOT NULL,
+  dc VARCHAR NOT NULL,
+  amount NUMERIC NOT NULL,
+  FOREIGN KEY (supplier_code) REFERENCES finance.suppliers (code)
+);

@@ -16,9 +16,10 @@ type journalServiceImpl struct {
 	InventoryRepository     repository.InventoryRepository
 	LinkedAccountRepository repository.LinkedAccountRepository
 	TaxRepository           repository.TaxRepository
+	SubsidiaryLedger        repository.SubsidiaryLedgerRepository
 }
 
-func NewJournalSerice(transactionRepository repository.TransactionRepository, journalRepository repository.JournalRepository, coaRepository repository.COARepository, inventoryRepository repository.InventoryRepository, linkedAccountRepository repository.LinkedAccountRepository, taxRepository repository.TaxRepository) JournalService {
+func NewJournalSerice(transactionRepository repository.TransactionRepository, journalRepository repository.JournalRepository, coaRepository repository.COARepository, inventoryRepository repository.InventoryRepository, linkedAccountRepository repository.LinkedAccountRepository, taxRepository repository.TaxRepository, subsidiaryLedger repository.SubsidiaryLedgerRepository) JournalService {
 	return &journalServiceImpl{
 		TransactionRepository:   transactionRepository,
 		JournalRepository:       journalRepository,
@@ -26,10 +27,14 @@ func NewJournalSerice(transactionRepository repository.TransactionRepository, jo
 		InventoryRepository:     inventoryRepository,
 		LinkedAccountRepository: linkedAccountRepository,
 		TaxRepository:           taxRepository,
+		SubsidiaryLedger:        subsidiaryLedger,
 	}
 }
 
 func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (err error) {
+	// jumlah transaksi
+	var inventoryAmount float64 = dto.Price * float64(dto.Quantity)
+
 	// cek akun yang dicredit
 	if dto.CreditAccount != util.COAAccountPayable && dto.CreditAccount != util.COACashInBank {
 		return errors.New("coa can't be use")
@@ -40,16 +45,38 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	}
 
 	// cek coa inventory code
-	// coaInventory, err := service.InventoryRepository.GetByCode(dto.InventoryCode)
-	// if err != nil {
-	// 	return errors.New("error getting coa inventory")
-	// }
+	_, err = service.InventoryRepository.GetByCode(dto.InventoryCode)
+	if err != nil {
+		return errors.New("error getting coa inventory")
+	}
 
-	// jumlah transaksi
-	var inventoryAmount float64 = dto.Price * float64(dto.Quantity)
+	// get saldo terakhir
+	currentBalance, err := service.InventoryRepository.CurrentBalance(dto.InventoryCode)
+	if err != nil {
+		return err
+	}
+
+	// kalkulasi saldo terbaru
+	balanceQuantity := currentBalance.Quantity + int(dto.Quantity)
+	balanceAmount := currentBalance.Amount + inventoryAmount
+	balancePrice := balanceAmount / float64(balanceQuantity)
+
+	// entity tambah
+	inventoryEntity := entity.InventoryIn{
+		Quantity:        int(dto.Quantity),
+		Price:           dto.Price,
+		Amount:          inventoryAmount,
+		BalanceQuantity: balanceQuantity,
+		BalancePrice:    balancePrice,
+		BalanceAmount:   balanceAmount,
+	}
+
+	if err := service.InventoryRepository.In(dto.InventoryCode, inventoryEntity); err != nil {
+		return err
+	}
 
 	// masukkan ke tabel transaksi
-	transaction_id, err := service.TransactionRepository.Insert("ketarangan", inventoryAmount)
+	transaction_id, err := service.TransactionRepository.Insert(dto.Description, inventoryAmount)
 	if err != nil {
 		return errors.New("error insert transaction")
 	}
@@ -74,6 +101,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	}
 
 	// jurnal pajak
+	var taxAmount float64
 	if dto.PPNIncome {
 		coaPPNIncome, err := service.LinkedAccountRepository.GetByCode("ppn_income")
 		if err != nil {
@@ -85,7 +113,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 		}
 
 		var taxRate float64 = float64(tax) / 100
-		var taxAmount float64 = inventoryAmount * taxRate
+		taxAmount = inventoryAmount * taxRate
 
 		journalPPNIncome := entity.PurchaseJournal{
 			TransactionID: transaction_id,
@@ -127,6 +155,13 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 		err = service.JournalRepository.PurchaseJournal(journalFreightPaid)
 		if err != nil {
 			return errors.New("error journal add inventory")
+		}
+	}
+
+	if dto.CreditAccount == util.COAAccountPayable && dto.SupplierCode != "" {
+		// insert ke buku besar pembantu utang
+		if err := service.SubsidiaryLedger.InsertPayable(dto.SupplierCode, inventoryAmount+taxAmount+dto.FreightPaid); err != nil {
+			return err
 		}
 	}
 
