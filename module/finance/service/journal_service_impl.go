@@ -70,53 +70,52 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 
 	err = service.JournalRepository.PurchaseJournal(journalInventory)
 	if err != nil {
-		// return errors.New("error journal add inventory")
-		return err
+		return errors.New("error journal add inventory")
 	}
 
 	// jurnal pajak
-	// if dto.PPNIncome {
-	// 	coaPPNIncome, err := service.LinkedAccountRepository.GetByCode("ppn_income")
-	// 	if err != nil {
-	// 		return errors.New("error getting linked account")
-	// 	}
-	// 	tax, err := service.TaxRepository.GetByCoa(coaPPNIncome)
-	// 	if err != nil {
-	// 		return errors.New("error getting tax rate")
-	// 	}
+	if dto.PPNIncome {
+		coaPPNIncome, err := service.LinkedAccountRepository.GetByCode("ppn_income")
+		if err != nil {
+			return errors.New("error getting linked account")
+		}
+		tax, err := service.TaxRepository.GetByCoa(coaPPNIncome)
+		if err != nil {
+			return errors.New("error getting tax rate")
+		}
 
-	// 	var taxRate float64 = float64(tax) / 100
-	// 	var taxAmount float64 = inventoryAmount * taxRate
+		var taxRate float64 = float64(tax) / 100
+		var taxAmount float64 = inventoryAmount * taxRate
 
-	// 	journalPPNIncome := entity.PurchaseJournal{
-	// 		TransactionID: transaction_id,
-	// 		Debet: entity.PurchaseJournalDebet{
-	// 			Code:   coaPPNIncome,
-	// 			Amount: taxAmount,
-	// 		},
-	// 		Credit: entity.PurchaseJournalCredit{
-	// 			Code:   dto.CreditAccount,
-	// 			Amount: taxAmount,
-	// 		},
-	// 	}
+		journalPPNIncome := entity.PurchaseJournal{
+			TransactionID: transaction_id,
+			Debet: entity.PurchaseJournalDebet{
+				Code:   coaPPNIncome,
+				Amount: taxAmount,
+			},
+			Credit: entity.PurchaseJournalCredit{
+				Code:   dto.CreditAccount,
+				Amount: taxAmount,
+			},
+		}
 
-	// 	err = service.JournalRepository.PurchaseJournal(journalPPNIncome)
-	// 	if err != nil {
-	// 		return errors.New("error journal add inventory")
-	// 	}
-	// }
+		err = service.JournalRepository.PurchaseJournal(journalPPNIncome)
+		if err != nil {
+			return errors.New("error journal add inventory")
+		}
+	}
 
 	// jurnal biaya angkut
 	if dto.FreightPaid > 0 {
-		// coaFreightPaid, err := service.LinkedAccountRepository.GetByCode("freight_paid")
-		// if err != nil {
-		// 	return errors.New("error getting linked account")
-		// }
+		coaFreightPaid, err := service.LinkedAccountRepository.GetByCode("freight_paid")
+		if err != nil {
+			return errors.New("error getting linked account")
+		}
 
 		journalFreightPaid := entity.PurchaseJournal{
 			TransactionID: transaction_id,
 			Debet: entity.PurchaseJournalDebet{
-				Code:   util.COAFreightPaid,
+				Code:   coaFreightPaid,
 				Amount: dto.FreightPaid,
 			},
 			Credit: entity.PurchaseJournalCredit{

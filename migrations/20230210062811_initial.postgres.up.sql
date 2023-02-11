@@ -97,3 +97,32 @@ CREATE TABLE finance.purchase_journals(
   FOREIGN KEY (transaction_id) REFERENCES finance.transactions (id),
   FOREIGN KEY (coa_code) REFERENCES finance.coas (code)
 );
+
+CREATE TABLE finance.linked_accounts(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  code VARCHAR NOT NULL UNIQUE,
+  coa_code VARCHAR NOT NULL,
+  FOREIGN KEY (coa_code) REFERENCES finance.coas (code)
+);
+
+INSERT INTO finance.linked_accounts(
+  code, coa_code
+) VALUES
+  ('ppn_income', '2-1500'),
+  ('ppn_outcome', '2-1600');
+
+CREATE TABLE finance.taxes(
+  id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  coa_code VARCHAR NOT NULL,
+  description VARCHAR,
+  rates_percent INTEGER NOT NULL,
+  FOREIGN KEY (coa_code) REFERENCES finance.coas (code)
+);
+
+INSERT INTO finance.taxes(
+  coa_code, description, rates_percent
+) VALUES 
+  ('2-1500', 'Pajak pertambahan nilai masuk', 11),
+  ('2-1600', 'Pajak pertambahan nilai keluar', 11);
