@@ -8,3 +8,9 @@ type InventoryIn struct {
 	BalancePrice    float64
 	BalanceAmount   float64
 }
+
+type Inventory struct {
+	Quantity int
+	Price    float64
+	Amount   float64
+}
