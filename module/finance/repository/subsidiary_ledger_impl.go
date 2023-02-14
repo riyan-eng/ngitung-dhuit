@@ -15,11 +15,11 @@ func NewSubsidiaryLedgerRepository(db *sql.DB) SubsidiaryLedgerRepository {
 	}
 }
 
-func (repository subsidiaryLedgerRepositoryImpl) InsertPayable(supplier_code string, amount float64) error {
+func (repository subsidiaryLedgerRepositoryImpl) InsertPayable(supplier_code, transactionID string, amount float64) error {
 	query := fmt.Sprintf(`
-		INSERT INTO finance.account_payable_subsidiary_ledgers (supplier_code, dc, amount)
-		VALUES ('%s', 'C', '%f')
-	`, supplier_code, amount)
+		INSERT INTO finance.account_payable_subsidiary_ledgers (supplier_code, transaction_id, dc, amount)
+		VALUES ('%s', '%s', 'C', '%f')
+	`, supplier_code, transactionID, amount)
 
 	_, err := repository.DB.Exec(query)
 	return err

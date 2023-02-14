@@ -48,6 +48,7 @@ INSERT INTO finance.coas(
   ('5-1000', NULL, 'Cost of Goods Sold', 'HPP'),
   ('5-1100', '5-1000', 'Cost of Goods Sold', 'Harga pokok penjualan'),
   ('5-1200', '5-1000', 'Freight Paid', 'Beban transportasi pembelian'),
+  ('5-1300', '5-1000', 'Purchase Discount', 'Potongan pembelian'),
   ('6-0000', NULL, 'Operating Expenses', 'Beban operasi'),
   ('6-1000', '6-0000', 'Advertising Expenses', 'Beban iklan'),
   ('6-1100', '6-0000', 'Telephone & Electricity Expenses', 'Beban telepon dan listrik'),
@@ -131,6 +132,7 @@ INSERT INTO finance.taxes(
 CREATE TABLE finance.good_stocks(
   id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transaction_id VARCHAR NOT NULL,
   good_code VARCHAR NOT NULL,
   dc VARCHAR NOT NULL,
   quantity INTEGER NOT NULL,
@@ -139,7 +141,8 @@ CREATE TABLE finance.good_stocks(
   balance_quantity INTEGER NOT NULL,
   balance_price NUMERIC NOT NULL,
   balance_amount NUMERIC NOT NULL,
-  FOREIGN KEY (good_code) REFERENCES finance.goods (code)
+  FOREIGN KEY (good_code) REFERENCES finance.goods (code),
+  FOREIGN KEY (transaction_id) REFERENCES finance.transactions (id)
 );
 
 CREATE TABLE finance.suppliers(
@@ -156,7 +159,9 @@ CREATE TABLE finance.account_payable_subsidiary_ledgers(
   id VARCHAR DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   supplier_code VARCHAR NOT NULL,
+  transaction_id VARCHAR NOT NULL,
   dc VARCHAR NOT NULL,
   amount NUMERIC NOT NULL,
-  FOREIGN KEY (supplier_code) REFERENCES finance.suppliers (code)
+  FOREIGN KEY (supplier_code) REFERENCES finance.suppliers (code),
+  FOREIGN KEY (transaction_id) REFERENCES finance.transactions (id)
 );

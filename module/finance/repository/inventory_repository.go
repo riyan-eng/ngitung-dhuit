@@ -8,6 +8,6 @@ import (
 type InventoryRepository interface {
 	GetByCode(string) (string, error)
 	CurrentBalance(string) (model.BalanceInventory, error)
-	In(string, entity.InventoryIn) error
+	In(string, string, entity.InventoryIn) error
 	Out() error
 }
