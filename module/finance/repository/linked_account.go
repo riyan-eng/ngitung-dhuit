@@ -1,5 +1,7 @@
 package repository
 
+import "github.com/valyala/fasthttp"
+
 type LinkedAccountRepository interface {
-	GetByCode(string) (string, error)
+	GetByCode(*fasthttp.RequestCtx, string) (string, error)
 }

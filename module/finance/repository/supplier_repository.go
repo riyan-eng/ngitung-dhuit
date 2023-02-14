@@ -1,5 +1,7 @@
 package repository
 
+import "github.com/valyala/fasthttp"
+
 type SupplierRepository interface {
-	FindOne(string) error
+	FindOne(*fasthttp.RequestCtx, string) error
 }

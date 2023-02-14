@@ -1,5 +1,7 @@
 package repository
 
+import "github.com/valyala/fasthttp"
+
 type SubsidiaryLedgerRepository interface {
-	InsertPayable(string, string, float64) error
+	InsertPayable(*fasthttp.RequestCtx, string, string, float64) error
 }

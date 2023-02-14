@@ -7,6 +7,7 @@ import (
 	"github.com/riyan-eng/ngitung-dhuit/module/finance/repository"
 	"github.com/riyan-eng/ngitung-dhuit/module/finance/service/entity"
 	"github.com/riyan-eng/ngitung-dhuit/util"
+	"github.com/valyala/fasthttp"
 )
 
 type journalServiceImpl struct {
@@ -33,17 +34,17 @@ func NewJournalSerice(transactionRepository repository.TransactionRepository, jo
 	}
 }
 
-func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (err error) {
+func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto *dto.PurchaseJournal) (err error) {
 	// cek akun yang dicredit
 	if dto.CreditAccount != util.COAAccountPayable && dto.CreditAccount != util.COACashInBank {
 		return errors.New("coa can't be use")
 	}
-	if err := service.COARepository.GetByCode(dto.CreditAccount); err != nil {
+	if err := service.COARepository.GetByCode(ctx, dto.CreditAccount); err != nil {
 		return errors.New("error getting coa credit")
 	}
 
 	// cek supplier
-	if err := service.SupplierRepository.FindOne(dto.SupplierCode); err != nil {
+	if err := service.SupplierRepository.FindOne(ctx, dto.SupplierCode); err != nil {
 		return err
 	}
 
@@ -52,7 +53,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	var inventoryDiscount float64
 	for _, good := range dto.Goods {
 		// cek coa inventory code
-		_, err = service.InventoryRepository.GetByCode(good.GoodCode)
+		_, err = service.InventoryRepository.GetByCode(ctx, good.GoodCode)
 		if err != nil {
 			return errors.New("error getting coa inventory")
 		}
@@ -68,11 +69,11 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	var ppnAmount float64
 	var coaPPNIncome string
 	if dto.PPNIncome {
-		coaPPNIncome, err = service.LinkedAccountRepository.GetByCode("ppn_income")
+		coaPPNIncome, err = service.LinkedAccountRepository.GetByCode(ctx, "ppn_income")
 		if err != nil {
 			return errors.New("error getting linked account")
 		}
-		tax, err := service.TaxRepository.GetByCoa(coaPPNIncome)
+		tax, err := service.TaxRepository.GetByCoa(ctx, coaPPNIncome)
 		if err != nil {
 			return errors.New("error getting tax rate")
 		}
@@ -81,17 +82,16 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	}
 
 	// cek freight paid
-	coaFreightPaid, err := service.LinkedAccountRepository.GetByCode("freight_paid")
+	coaFreightPaid, err := service.LinkedAccountRepository.GetByCode(ctx, "freight_paid")
 	if err != nil {
 		return errors.New("error getting linked account")
 	}
 
-	// ppnAmount := 1
 	total := inventoryTotal + ppnAmount + dto.FreightPaid
 
 	// insert transaction
 	var transactionID string
-	if transactionID, err = service.TransactionRepository.Insert(dto.Description, total); err != nil {
+	if transactionID, err = service.TransactionRepository.Insert(ctx, dto.Description, total); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 			Amount: inventoryAmount,
 		},
 	}
-	if err := service.JournalRepository.PurchaseJournal(journalInventory); err != nil {
+	if err := service.JournalRepository.PurchaseJournal(ctx, journalInventory); err != nil {
 		return errors.New("error journal add inventory")
 	}
 
@@ -124,7 +124,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 				Amount: inventoryDiscount,
 			},
 		}
-		if err := service.JournalRepository.PurchaseJournal(journalInventory); err != nil {
+		if err := service.JournalRepository.PurchaseJournal(ctx, journalInventory); err != nil {
 			return errors.New("error journal add inventory")
 		}
 	}
@@ -133,7 +133,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 	for _, good := range dto.Goods {
 		amount := good.Price * float64(good.Qty)
 		// get saldo terakhir
-		currentBalance, err := service.InventoryRepository.CurrentBalance(good.GoodCode)
+		currentBalance, err := service.InventoryRepository.CurrentBalance(ctx, good.GoodCode)
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 			BalancePrice:    balancePrice,
 			BalanceAmount:   balanceAmount,
 		}
-		if err := service.InventoryRepository.In(transactionID, good.GoodCode, inventoryEntity); err != nil {
+		if err := service.InventoryRepository.In(ctx, transactionID, good.GoodCode, inventoryEntity); err != nil {
 			return err
 		}
 	}
@@ -169,7 +169,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 				Amount: ppnAmount,
 			},
 		}
-		if err := service.JournalRepository.PurchaseJournal(journalPPNIncome); err != nil {
+		if err := service.JournalRepository.PurchaseJournal(ctx, journalPPNIncome); err != nil {
 			return errors.New("error journal add inventory")
 		}
 	}
@@ -187,7 +187,7 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 				Amount: dto.FreightPaid,
 			},
 		}
-		err = service.JournalRepository.PurchaseJournal(journalFreightPaid)
+		err = service.JournalRepository.PurchaseJournal(ctx, journalFreightPaid)
 		if err != nil {
 			return errors.New("error journal add inventory")
 		}
@@ -195,21 +195,13 @@ func (service *journalServiceImpl) PurchaseJournal(dto *dto.PurchaseJournal) (er
 
 	// insert buku besar pembantu utang
 	if dto.CreditAccount == util.COAAccountPayable && dto.SupplierCode != "" {
-		if err := service.SubsidiaryLedger.InsertPayable(dto.SupplierCode, transactionID, total); err != nil {
+		if err := service.SubsidiaryLedger.InsertPayable(ctx, dto.SupplierCode, transactionID, total); err != nil {
 			return err
 		}
 	}
 
 	return nil
 }
-
-// func insertTableInventory(inventoryCode, transactionId string, inventoryEntity entity.Inventory) error {
-// 	return nil
-// }
-
-// func insertTablePurchaseJournal(purchaseJournal entity.PurchaseJournal) error {
-// 	return nil
-// }
 
 func (service *journalServiceImpl) SalesJournal() {
 

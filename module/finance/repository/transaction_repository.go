@@ -1,5 +1,7 @@
 package repository
 
+import "github.com/valyala/fasthttp"
+
 type TransactionRepository interface {
-	Insert(string, float64) (string, error)
+	Insert(*fasthttp.RequestCtx, string, float64) (string, error)
 }

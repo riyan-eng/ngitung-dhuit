@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/valyala/fasthttp"
 )
 
 func NewCOARepository(db *sql.DB) COARepository {
@@ -15,11 +17,11 @@ type chartOfAccountRepositoryImpl struct {
 	Database *sql.DB
 }
 
-func (repository *chartOfAccountRepositoryImpl) GetByCode(coa string) error {
+func (repository *chartOfAccountRepositoryImpl) GetByCode(ctx *fasthttp.RequestCtx, coa string) error {
 	query := fmt.Sprintf(`
 		select coa.id from finance.coas coa where coa.code = '%v'
 	`, coa)
-	err := repository.Database.QueryRow(query).Err()
+	err := repository.Database.QueryRowContext(ctx, query).Err()
 	if err != nil {
 		return err
 	}

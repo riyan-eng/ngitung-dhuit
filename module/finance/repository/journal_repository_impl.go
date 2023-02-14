@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/riyan-eng/ngitung-dhuit/module/finance/service/entity"
+	"github.com/valyala/fasthttp"
 )
 
 func NewJournalRepository(db *sql.DB) JournalRepository {
@@ -18,7 +19,7 @@ type journalRepositoryImpl struct {
 	Database *sql.DB
 }
 
-func (repository *journalRepositoryImpl) PurchaseJournal(journal entity.PurchaseJournal) error {
+func (repository *journalRepositoryImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, journal entity.PurchaseJournal) error {
 
 	queryPurchaseJournalDebet := fmt.Sprintf(`
 		INSERT INTO finance.purchase_journals (transaction_id, coa_code, dc, amount) VALUES ('%s', '%s', 'D', '%f')
@@ -35,12 +36,12 @@ func (repository *journalRepositoryImpl) PurchaseJournal(journal entity.Purchase
 
 	defer tx.Rollback()
 
-	_, err = tx.Exec(queryPurchaseJournalDebet)
+	_, err = tx.ExecContext(ctx, queryPurchaseJournalDebet)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(queryPurchaseJournalCredit)
+	_, err = tx.ExecContext(ctx, queryPurchaseJournalCredit)
 	if err != nil {
 		return err
 	}

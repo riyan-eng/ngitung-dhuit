@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/valyala/fasthttp"
 )
 
 type linkedAccountRepositoryImpl struct {
@@ -15,11 +17,11 @@ func NewLinkedAccountRepository(db *sql.DB) LinkedAccountRepository {
 	}
 }
 
-func (repository *linkedAccountRepositoryImpl) GetByCode(code string) (string, error) {
+func (repository *linkedAccountRepositoryImpl) GetByCode(ctx *fasthttp.RequestCtx, code string) (string, error) {
 	var coa string
 	query := fmt.Sprintf(`
 		SELECT la.coa_code as coa FROM finance.linked_accounts la where la.code = '%s'
 	`, code)
-	err := repository.DB.QueryRow(query).Scan(&coa)
+	err := repository.DB.QueryRowContext(ctx, query).Scan(&coa)
 	return coa, err
 }

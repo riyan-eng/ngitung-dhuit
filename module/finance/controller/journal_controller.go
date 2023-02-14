@@ -41,7 +41,8 @@ func (service journalService) PurchaseJournal(c *fiber.Ctx) error {
 	}
 
 	// communicate service
-	if err := service.Journal.PurchaseJournal(body); err != nil {
+	ctx := c.Context()
+	if err := service.Journal.PurchaseJournal(ctx, body); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"data":    err.Error(),
 			"message": "bad",

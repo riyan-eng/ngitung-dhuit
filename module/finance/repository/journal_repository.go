@@ -1,8 +1,11 @@
 package repository
 
-import "github.com/riyan-eng/ngitung-dhuit/module/finance/service/entity"
+import (
+	"github.com/riyan-eng/ngitung-dhuit/module/finance/service/entity"
+	"github.com/valyala/fasthttp"
+)
 
 type JournalRepository interface {
-	PurchaseJournal(entity.PurchaseJournal) error
+	PurchaseJournal(*fasthttp.RequestCtx, entity.PurchaseJournal) error
 	SalesJournal()
 }

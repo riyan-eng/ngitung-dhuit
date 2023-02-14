@@ -1,5 +1,7 @@
 package repository
 
+import "github.com/valyala/fasthttp"
+
 type TaxRepository interface {
-	GetByCoa(string) (int, error)
+	GetByCoa(*fasthttp.RequestCtx, string) (int, error)
 }
