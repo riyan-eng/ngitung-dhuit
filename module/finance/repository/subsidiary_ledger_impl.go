@@ -8,21 +8,21 @@ import (
 )
 
 type subsidiaryLedgerRepositoryImpl struct {
-	DB *sql.DB
+	Database *sql.DB
 }
 
-func NewSubsidiaryLedgerRepository(db *sql.DB) SubsidiaryLedgerRepository {
+func NewSubsidiaryLedgerRepository(database *sql.DB) SubsidiaryLedgerRepository {
 	return &subsidiaryLedgerRepositoryImpl{
-		DB: db,
+		Database: database,
 	}
 }
 
-func (repository subsidiaryLedgerRepositoryImpl) InsertPayable(ctx *fasthttp.RequestCtx, supplier_code, transactionID string, amount float64) error {
+func (repository subsidiaryLedgerRepositoryImpl) InsertOnePayable(ctx *fasthttp.RequestCtx, supplier_code, transactionID string, amount float64) error {
 	query := fmt.Sprintf(`
 		INSERT INTO finance.account_payable_subsidiary_ledgers (supplier_code, transaction_id, dc, amount)
 		VALUES ('%s', '%s', 'C', '%f')
 	`, supplier_code, transactionID, amount)
 
-	_, err := repository.DB.ExecContext(ctx, query)
+	_, err := repository.Database.ExecContext(ctx, query)
 	return err
 }

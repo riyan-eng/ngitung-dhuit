@@ -8,21 +8,21 @@ import (
 )
 
 type taxRepositoryImpl struct {
-	DB *sql.DB
+	Database *sql.DB
 }
 
-func NewTaxRepository(db *sql.DB) TaxRepository {
+func NewTaxRepository(database *sql.DB) TaxRepository {
 	return &taxRepositoryImpl{
-		DB: db,
+		Database: database,
 	}
 }
 
-func (repository *taxRepositoryImpl) GetByCoa(ctx *fasthttp.RequestCtx, coa string) (int, error) {
+func (repository *taxRepositoryImpl) FindOneByCoa(ctx *fasthttp.RequestCtx, coa string) (int, error) {
 	var rates int
 	query := fmt.Sprintf(`
 		SELECT t.rates_percent as rates FROM finance.taxes t WHERE t.coa_code = '%s'
 	`, coa)
 
-	err := repository.DB.QueryRowContext(ctx, query).Scan(&rates)
+	err := repository.Database.QueryRowContext(ctx, query).Scan(&rates)
 	return rates, err
 }

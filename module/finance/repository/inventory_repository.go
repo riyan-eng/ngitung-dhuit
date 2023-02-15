@@ -7,7 +7,7 @@ import (
 )
 
 type InventoryRepository interface {
-	GetByCode(*fasthttp.RequestCtx, string) (string, error)
+	FindOneByCode(*fasthttp.RequestCtx, string) (string, error)
 	CurrentBalance(*fasthttp.RequestCtx, string) (model.BalanceInventory, error)
 	In(*fasthttp.RequestCtx, string, string, entity.InventoryIn) error
 	Out() error

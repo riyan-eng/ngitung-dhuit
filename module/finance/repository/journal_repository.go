@@ -6,6 +6,6 @@ import (
 )
 
 type JournalRepository interface {
-	PurchaseJournal(*fasthttp.RequestCtx, entity.PurchaseJournal) error
+	InsertOnePurchaseJournal(*fasthttp.RequestCtx, entity.PurchaseJournal) error
 	SalesJournal()
 }

@@ -39,12 +39,12 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 	if dto.CreditAccount != util.COAAccountPayable && dto.CreditAccount != util.COACashInBank {
 		return errors.New("coa can't be use")
 	}
-	if err := service.COARepository.GetByCode(ctx, dto.CreditAccount); err != nil {
+	if err := service.COARepository.FindOneByCode(ctx, dto.CreditAccount); err != nil {
 		return errors.New("error getting coa credit")
 	}
 
 	// cek supplier
-	if err := service.SupplierRepository.FindOne(ctx, dto.SupplierCode); err != nil {
+	if err := service.SupplierRepository.FindOneByCode(ctx, dto.SupplierCode); err != nil {
 		return err
 	}
 
@@ -53,7 +53,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 	var inventoryDiscount float64
 	for _, good := range dto.Goods {
 		// cek coa inventory code
-		_, err = service.InventoryRepository.GetByCode(ctx, good.GoodCode)
+		_, err = service.InventoryRepository.FindOneByCode(ctx, good.GoodCode)
 		if err != nil {
 			return errors.New("error getting coa inventory")
 		}
@@ -69,11 +69,11 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 	var ppnAmount float64
 	var coaPPNIncome string
 	if dto.PPNIncome {
-		coaPPNIncome, err = service.LinkedAccountRepository.GetByCode(ctx, "ppn_income")
+		coaPPNIncome, err = service.LinkedAccountRepository.FindOneByCode(ctx, "ppn_income")
 		if err != nil {
 			return errors.New("error getting linked account")
 		}
-		tax, err := service.TaxRepository.GetByCoa(ctx, coaPPNIncome)
+		tax, err := service.TaxRepository.FindOneByCoa(ctx, coaPPNIncome)
 		if err != nil {
 			return errors.New("error getting tax rate")
 		}
@@ -82,7 +82,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 	}
 
 	// cek freight paid
-	coaFreightPaid, err := service.LinkedAccountRepository.GetByCode(ctx, "freight_paid")
+	coaFreightPaid, err := service.LinkedAccountRepository.FindOneByCode(ctx, "freight_paid")
 	if err != nil {
 		return errors.New("error getting linked account")
 	}
@@ -91,7 +91,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 
 	// insert transaction
 	var transactionID string
-	if transactionID, err = service.TransactionRepository.Insert(ctx, dto.Description, total); err != nil {
+	if transactionID, err = service.TransactionRepository.InsertOne(ctx, dto.Description, total); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 			Amount: inventoryAmount,
 		},
 	}
-	if err := service.JournalRepository.PurchaseJournal(ctx, journalInventory); err != nil {
+	if err := service.JournalRepository.InsertOnePurchaseJournal(ctx, journalInventory); err != nil {
 		return errors.New("error journal add inventory")
 	}
 
@@ -124,7 +124,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 				Amount: inventoryDiscount,
 			},
 		}
-		if err := service.JournalRepository.PurchaseJournal(ctx, journalInventory); err != nil {
+		if err := service.JournalRepository.InsertOnePurchaseJournal(ctx, journalInventory); err != nil {
 			return errors.New("error journal add inventory")
 		}
 	}
@@ -169,7 +169,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 				Amount: ppnAmount,
 			},
 		}
-		if err := service.JournalRepository.PurchaseJournal(ctx, journalPPNIncome); err != nil {
+		if err := service.JournalRepository.InsertOnePurchaseJournal(ctx, journalPPNIncome); err != nil {
 			return errors.New("error journal add inventory")
 		}
 	}
@@ -187,7 +187,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 				Amount: dto.FreightPaid,
 			},
 		}
-		err = service.JournalRepository.PurchaseJournal(ctx, journalFreightPaid)
+		err = service.JournalRepository.InsertOnePurchaseJournal(ctx, journalFreightPaid)
 		if err != nil {
 			return errors.New("error journal add inventory")
 		}
@@ -195,12 +195,11 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 
 	// insert buku besar pembantu utang
 	if dto.CreditAccount == util.COAAccountPayable && dto.SupplierCode != "" {
-		if err := service.SubsidiaryLedger.InsertPayable(ctx, dto.SupplierCode, transactionID, total); err != nil {
+		if err := service.SubsidiaryLedger.InsertOnePayable(ctx, dto.SupplierCode, transactionID, total); err != nil {
 			return err
 		}
 	}
-
-	return nil
+	return err
 }
 
 func (service *journalServiceImpl) SalesJournal() {

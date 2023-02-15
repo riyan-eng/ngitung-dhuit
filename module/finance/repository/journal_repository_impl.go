@@ -9,9 +9,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func NewJournalRepository(db *sql.DB) JournalRepository {
+func NewJournalRepository(database *sql.DB) JournalRepository {
 	return &journalRepositoryImpl{
-		Database: db,
+		Database: database,
 	}
 }
 
@@ -19,7 +19,7 @@ type journalRepositoryImpl struct {
 	Database *sql.DB
 }
 
-func (repository *journalRepositoryImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, journal entity.PurchaseJournal) error {
+func (repository *journalRepositoryImpl) InsertOnePurchaseJournal(ctx *fasthttp.RequestCtx, journal entity.PurchaseJournal) error {
 
 	queryPurchaseJournalDebet := fmt.Sprintf(`
 		INSERT INTO finance.purchase_journals (transaction_id, coa_code, dc, amount) VALUES ('%s', '%s', 'D', '%f')

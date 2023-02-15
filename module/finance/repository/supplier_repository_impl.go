@@ -9,21 +9,21 @@ import (
 )
 
 type supplierRepositoryImpl struct {
-	DB *sql.DB
+	Database *sql.DB
 }
 
-func NewSupplierRepository(db *sql.DB) SupplierRepository {
+func NewSupplierRepository(database *sql.DB) SupplierRepository {
 	return &supplierRepositoryImpl{
-		DB: db,
+		Database: database,
 	}
 }
 
-func (repository supplierRepositoryImpl) FindOne(ctx *fasthttp.RequestCtx, supplierCode string) error {
+func (repository supplierRepositoryImpl) FindOneByCode(ctx *fasthttp.RequestCtx, supplierCode string) error {
 	var supplier string
 	query := fmt.Sprintf(`
 		select s.code from finance.suppliers s where s.code = '%s'
 	`, supplierCode)
-	err := repository.DB.QueryRowContext(ctx, query).Scan(&supplier)
+	err := repository.Database.QueryRowContext(ctx, query).Scan(&supplier)
 	if err == sql.ErrNoRows {
 		return errors.New("no data")
 	} else {

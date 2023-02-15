@@ -7,9 +7,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func NewCOARepository(db *sql.DB) COARepository {
+func NewCOARepository(database *sql.DB) COARepository {
 	return &chartOfAccountRepositoryImpl{
-		Database: db,
+		Database: database,
 	}
 }
 
@@ -17,7 +17,7 @@ type chartOfAccountRepositoryImpl struct {
 	Database *sql.DB
 }
 
-func (repository *chartOfAccountRepositoryImpl) GetByCode(ctx *fasthttp.RequestCtx, coa string) error {
+func (repository *chartOfAccountRepositoryImpl) FindOneByCode(ctx *fasthttp.RequestCtx, coa string) error {
 	query := fmt.Sprintf(`
 		select coa.id from finance.coas coa where coa.code = '%v'
 	`, coa)
