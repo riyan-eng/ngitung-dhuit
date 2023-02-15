@@ -205,3 +205,7 @@ func (service *journalServiceImpl) PurchaseJournal(ctx *fasthttp.RequestCtx, dto
 func (service *journalServiceImpl) SalesJournal() {
 
 }
+
+func (service *journalServiceImpl) CashPaymentJournal() {
+	//
+}

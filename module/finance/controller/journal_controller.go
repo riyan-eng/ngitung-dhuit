@@ -19,6 +19,7 @@ func NewJournalController(service service.JournalService, route *fiber.App) {
 	journalRoute := route.Group("/journal")
 	journalRoute.Post("/purchase", srvc.PurchaseJournal)
 	journalRoute.Post("/sales", srvc.SalesJournal)
+	journalRoute.Post("/cash_payment_journal", srvc.CashPaymentJournal)
 }
 
 func (service journalService) PurchaseJournal(c *fiber.Ctx) error {
@@ -57,5 +58,9 @@ func (service journalService) PurchaseJournal(c *fiber.Ctx) error {
 }
 
 func (service journalService) SalesJournal(c *fiber.Ctx) error {
+	return nil
+}
+
+func (service journalService) CashPaymentJournal(c *fiber.Ctx) error {
 	return nil
 }

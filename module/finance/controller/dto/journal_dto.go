@@ -24,3 +24,13 @@ type SalesJournal struct {
 	FreightCollected float64 `json:"freight_collected"`
 	DebitAccount     string  `json:"debit_account" validate:"required"`
 }
+
+type Transaction struct {
+	Coa    string  `json:"coa" validate:"required"`
+	Amount float64 `json:"amount" validate:"required"`
+}
+
+type CashPaymentJournal struct {
+	Debet  []Transaction `json:"debet" validate:"required"`
+	Credit []Transaction `json:"credit" validate:"required"`
+}
