@@ -8,5 +8,5 @@ import (
 type JournalService interface {
 	PurchaseJournal(*fasthttp.RequestCtx, *dto.PurchaseJournal) error
 	SalesJournal()
-	CashPaymentJournal()
+	CashPaymentJournal(*fasthttp.RequestCtx, dto.CashPaymentJournal) error
 }

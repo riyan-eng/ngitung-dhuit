@@ -206,6 +206,31 @@ func (service *journalServiceImpl) SalesJournal() {
 
 }
 
-func (service *journalServiceImpl) CashPaymentJournal() {
-	//
+func (service *journalServiceImpl) CashPaymentJournal(ctx *fasthttp.RequestCtx, cpj dto.CashPaymentJournal) error {
+	var debetAmount float64
+	var creditAmount float64
+	// chek debet account
+	for _, val := range cpj.Debet {
+		err := service.COARepository.FindOneByCode(ctx, val.Coa)
+		if err != nil {
+			return err
+		}
+		debetAmount += val.Amount
+	}
+
+	// check credit account
+	for _, val := range cpj.Credit {
+		err := service.COARepository.FindOneByCode(ctx, val.Coa)
+		if err != nil {
+			return err
+		}
+		creditAmount += val.Amount
+	}
+
+	// check balances
+	if debetAmount != creditAmount {
+		return errors.New("debet and credit not balance")
+	}
+
+	return nil
 }
